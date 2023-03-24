@@ -69,8 +69,6 @@ new_managers_data$AgeCat[is.na(Age)] <- "Elder"
 detach(new_managers_data)
 
 # Total answers column can then be recreated
-# Create a new column called 'summary_col' that
-# contains a summary of each row
 # use attach to reduce the need to provide full 
 # reference to each variable
 # In this example we do not need to refer to newe_managers_data when
