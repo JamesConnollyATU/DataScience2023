@@ -1,4 +1,3 @@
-
 # Practical 6 --------------------------------------------------------
 # Refer to notes on Blackboard
 # --------------------------------------------------------------------
@@ -104,3 +103,79 @@ histogram(~temp | activ,
           xlab = "Temperature (degrees)", 
           ylab = "Activity %")
 detach(beavers_data)
+
+# ----------------------------------------------------------------
+# Selecting the appropriate test
+# ----------------------------------------------------------------
+# We need to check whether the data is normally distributed or not
+# See notes on Blackboard for more information
+
+# Quantile-quantile plot allows us to check if the
+# data is distributed normally
+# Compare the quantiles of both samples 
+# We use square brackets to select the cases we want
+attach(beavers_data)
+qqnorm(temp)
+# this line represents normal distribution
+qqline(temp, col = "red")
+
+# We can examine whether there is a linear
+# correlation between both answers in
+# the activity variable
+# Seems that the "yes" occurrences may 
+# be normally distributed and the "no"
+# occurrences may not be normally distributed
+
+opar <- par(no.readonly = TRUE)
+# arrange plots in 1 rows and 2 column
+par(mfrow = c(1, 2))
+
+with(beavers_data, {
+  qqnorm(temp[activity == "yes"], 
+         main = "Beavers active data")
+  qqline(temp[activity == "yes"])
+})
+
+with(beavers_data, {
+  qqnorm(temp[activity == "no"], 
+         main = "Beavers inactive data")
+  qqline(temp[activity == "no"])
+})
+
+par(opar)
+
+# Formal test of normality
+# provided through widely used Shapiro-Wilks test
+normality_test <- shapiro.test(beavers_data$temp)
+normality_test$p.value
+# p-value tells us the chances that the sample comes 
+# from a normal distribution 
+# In this example, p-value is clearly lower than 0.05
+# so not normally distributed
+
+# this method does not work for a dichotomous variable
+# Data needs to be numeric for shapiro Wilk test
+normality_test <- shapiro.test(beavers_data$activity)
+
+# We can check the normality in each variable
+# using the tapply() function instead
+with(beavers_data, tapply(temp, activity, shapiro.test))
+
+# OR
+tapply(temp, activity, shapiro.test)
+
+# Data is not normally distributed
+# and p-value for "temp" variable also indicates that the
+# data is not normally distributed
+# so we need to use a non-parametric test
+
+# After consulting the chart, I am examining
+# a dependent continuous variable (temp)
+# with an independent categorical variable (activity)
+# so I use the Mann-Whitney test
+# this is also known as the "wilcox test" in R
+# Format = wilcox.test(dependent~independent)
+wilcox.test(temp~activity)
+
+# p-value is < 0.05 so we reject H0 and conclude that 
+# beaver body temperature is affected by activity (p = 2.2e-16)
