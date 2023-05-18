@@ -3,6 +3,8 @@
 # Q1
 states <- as.data.frame(state.x77)
 str(states)
+# Add the states name as a variable
+states$name <- state.name
 
 # Renaming Life Exp and HS Grad variables as 
 # these will cause possible issues when referring to
@@ -118,3 +120,108 @@ paste("Population outliers: ", paste(outlier_values, collapse=", "))
 # Use boxplot.stats() function to generate relevant outliers
 outlier_values <- boxplot.stats(states$Income)$out # outlier values.
 paste("Income outliers: ", paste(outlier_values, collapse=", "))
+
+# Remove population outliers
+states <- subset(states,
+                 states$Population != 21198
+                 & states$Population != 11197
+                 & states$Population != 18076
+                 & states$Population != 11860
+                 & states$Population != 12237)
+# Remove Income outliers
+states <- subset(states, states$Income != 6315)
+# Remove Area outliers
+states <- subset(states,
+                 states$Area != 566432
+                 & states$Population != 156361
+                 & states$Population != 262134)
+
+# Re-run the box-plots to verify that outliers have now gone.
+
+# Q3c
+# Check for normality
+# Skewness function to examine normality
+# install.packages("e1071")
+library(e1071)
+opar <- par(no.readonly = TRUE)
+par(mfrow = c(4,2)) # divide graph area into 1 row x 2 cols
+
+# skewness of < -1 or > 1 = highly skewed
+# -1 to -0.5 and 0.5 to 1 = moderately skewed
+# Skewness of -0.5 to 0.5 = approx symetrical
+plot(density(states$Population),
+     main = "Density plot : Population",
+     ylab = "Frequency", xlab = "Population",
+     sub = paste("Skewness : ", round(e1071::skewness(states$Population), 2)))
+# fill the area under the plot
+polygon(density(states$Population), col = "red")
+
+plot(density(states$Murder),
+     main = "Density plot : Murder",
+     ylab = "Frequency", xlab = "Murder",
+     sub = paste("Skewness : ", round(e1071::skewness(states$Murder), 2)))
+polygon(density(states$Murder), col = "red")
+
+plot(density(states$HS_Grad),
+     main = "Density plot : HS grade",
+     ylab = "Frequency", xlab = "HS grade",
+     sub = paste("Skewness : ", round(e1071::skewness(states$HS_Grad), 2)))
+# fill the area under the plot
+polygon(density(states$HS_Grad), col = "red")
+plot(density(states$Illiteracy),
+     main = "Density plot : Illiteracy",
+     ylab = "Frequency", xlab = "Illiteracy",
+     sub = paste("Skewness : ", round(e1071::skewness(states$Illiteracy), 2)))
+polygon(density(states$Illiteracy), col = "red")
+plot(density(states$Income),
+     main = "Density plot : Income",
+     ylab = "Frequency", xlab = "Income",
+     sub = paste("Skewness : ", round(e1071::skewness(states$Income), 2)))
+# fill the area under the plot
+polygon(density(states$Income), col = "red")
+plot(density(states$Frost),
+     main = "Density plot : Frost",
+     ylab = "Frequency", xlab = "Feost",
+     sub = paste("Skewness : ", round(e1071::skewness(states$Frost), 2)))
+# fill the area under the plot
+polygon(density(states$Frost), col = "red")
+par(opar)
+
+# Minimal skewness = -0.11 - slightly skewed to the left. 
+# NB a skewness value <-1 or >1 = highly skewed. 
+# Skewness -1 to -05 and 0.5 to 1 = moderately skewed. 
+# And skewness -0.5 to 0-5 = approx symetric.
+# Illiteracy = 0.87 = moderatly skewed
+# Population = 1.15 = highly skewed
+# all others seem okay
+paste("Skewness for illiteracy : ", round(e1071::skewness(states$Illiteracy), 2))
+paste("Skewness for population : ", round(e1071::skewness(states$Population), 2))
+paste("Skewness for murder : ", round(e1071::skewness(states$Murder), 2))
+paste("Skewness for HS grad : ", round(e1071::skewness(states$HS_Grad), 2))
+paste("Skewness for income : ", round(e1071::skewness(states$Income), 2))
+paste("Skewness for frost : ", round(e1071::skewness(states$Frost), 2))
+
+# It seems that population must be converted
+# Data is visually skewed to the right
+hist(states$Population)
+
+# p-value indices that the data is not normally distributed
+shapiro.test(states$Population)
+
+# Check normality of the other variables
+shapiro.test(states$Illiteracy)
+shapiro.test(states$Murder)
+shapiro.test(states$HS_Grad)
+shapiro.test(states$Income)
+shapiro.test(states$Frost)
+
+# If p-value < 0.05 then variable
+# is not normally distributed
+
+# Illiteracy is not normally distributed (p-value = 8.297e-05)
+# Murder is normally distributed (p-value = 0.06601)
+# HS_grad is not normally distributed (p-value = 0.02194)
+# Income is normally distributed (p-value = 0.3246)
+# Frost is normally distributed (p-value = 0.0928)
+
+# Need to transform illiteracy, HS_grad and populaiton
