@@ -336,3 +336,90 @@ plot(MLR_subset_selection, scale="adjr2")
 # is best. I'm dropping frost as it has probably
 # a spurious correlation
 stepAIC(unmodified_model, direction="backward")
+
+modified_model <- lm(Murder ~ transformed_Population 
+                     + Income + transformed_Illiteracy 
+                     + Life_Exp + transformed_HS_Grad, 
+                     data = training_data)
+summary(modified_model)
+
+# We can examine best fitting model using leaps
+MLR_subset_selection_modified <-regsubsets(Murder ~ transformed_Population 
+                   + Income + transformed_Illiteracy 
+                   + Life_Exp + transformed_HS_Grad,
+                   data = training_data, nbest=6)
+plot(MLR_subset_selection_modified, scale="adjr2")
+
+# It seems that the untransformed model
+# could be more accurate than the transformed model 
+
+
+# Confidence interval shows us that 
+# eg population that we can be 95% certain that 
+# of murder rate if income is between -0.002 and 1.94 
+confint(unmodified_model)
+
+confint(modified_model)
+
+# Examine outliers for the unmodified model
+library(car)
+qqPlot(unmodified_model, 
+       labels=row.names(training_data$name), 
+       id.method="identify", 
+       simulate=TRUE, 
+       main="Q-Q Plot for unmodified model")
+
+# Nevada and Maine are identidief as outliers
+# Lets examine why
+
+training_data["Nevada",]
+training_data["Maine",]
+
+# The fitted() function extracts fitted values 
+# from objects returned by modeling functions. It
+# returns the predicted murder rate for a particular state.
+fitted(unmodified_model)["Nevada"]
+fitted(unmodified_model)["Maine"]
+
+# These results tell us that the murder rate in Nevada
+# is 11.5%, but the model predicts 8.25%
+# murder rate. and for Maine, the murder rate 
+# is 2.7% and the model predicts 6.15%.
+
+# We can view these errors using a histogram. This code 
+# generates a histogram of the studentized
+# residuals and superimposes a normal curve, 
+# kernel-density curve, and rug plot
+
+# the errors follow a normal distribution quite well, 
+# with the exception of 1 outlier
+# on the right of the chart (outside the +2 boundary). 
+# The Q-Q plot is probably more informative
+# in terms of displaying outliers.
+# A rough rule is that standardized residuals 
+# that are larger than 2 or less than –2 are worth attention
+studentized_fit <- rstudent(unmodified_model)
+hist(studentized_fit, 
+     breaks=10, 
+     freq=FALSE, 
+     xlab="Studentized Residual", 
+     main="Distribution of Errors")
+
+# Rug plot is used to show the distribution of the data
+# Here it is showing the distribution
+# of the x-axis data. The term "rug plot" originates
+# from the effect that perpendicular markers look like tassles
+# on the edge of a rug
+rug(jitter(studentized_fit), col="brown")
+curve(dnorm(x, mean=mean(studentized_fit), sd=sd(studentized_fit)), add=TRUE, col="blue", lwd=2)
+lines(density(studentized_fit)$x, density(studentized_fit)$y, col="red", lwd=2, lty=2)
+legend("topright", legend = c( "Normal Curve", "Kernel Density Curve"), lty=1:2, col=c("blue","red"), cex=.7)
+
+# car package also provides a statistical test for outliers. 
+# The outlierTest() function reports
+# the Bonferroni adjusted p-value for the largest absolute studentized residual
+# Only 1 outier identified at a time
+outlierTest(unmodified_model)
+
+# As shown earlier, Nevada is an outlier for this test as well as the 
+# qq-plot
